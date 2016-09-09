@@ -11,9 +11,7 @@ fn main() {
         io::stdin().read_line(&mut input)
             .expect("Failed to read line");
         let tokens = tokenize(input);
-        println!("{:?}", tokens);
         let stack = shunt(tokens);
-        println!("{:?}", stack);
         let res = calculate(stack);
         println!("{}", res);
     }
@@ -107,8 +105,32 @@ fn shunt(tokens: Vec<Token>) -> Vec<Token> {
 }
 
 /// Takes a Vec of Tokens converted to RPN by `shunt` and calculates the result
-fn calculate(stack: Vec<Token>) -> i64 {
-    0
+fn calculate(tokens: Vec<Token>) -> i64 {
+    let mut stack = vec![];
+    for token in tokens {
+        match token {
+            Token::Number(n) => stack.push(n),
+            Token::Plus => {
+                let (b, a) = (stack.pop().unwrap(), stack.pop().unwrap());
+                stack.push(a + b);
+            },
+            Token::Sub => {
+                let (b, a) = (stack.pop().unwrap(), stack.pop().unwrap());
+                stack.push(a - b);
+            },
+            Token::Mul => {
+                let (b, a) = (stack.pop().unwrap(), stack.pop().unwrap());
+                stack.push(a * b);
+            },
+            Token::Div => {
+                let (b, a) = (stack.pop().unwrap(), stack.pop().unwrap());
+                stack.push(a / b);
+            },
+            _ => unreachable!() // By the time the token stream gets here, all the LeftParen
+                                // and RightParen tokens will have been removed by shunt()
+        }
+    }
+    stack[0]
 }
 
 /// Returns the precedence of op
