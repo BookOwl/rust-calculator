@@ -13,6 +13,7 @@ fn main() {
         let tokens = tokenize(input);
         println!("{:?}", tokens);
         let stack = shunt(tokens);
+        println!("{:?}", stack);
         let res = calculate(stack);
         println!("{}", res);
     }
@@ -26,6 +27,8 @@ enum Token {
     Sub,
     Mul,
     Div,
+    LeftParen,
+    RightParen,
 }
 
 /// Tokenizes the input string into a Vec of Tokens.
@@ -46,12 +49,16 @@ fn tokenize(mut input: String) -> Vec<Token> {
                 Some('-') => Token::Sub,
                 Some('*') => Token::Mul,
                 Some('/') => Token::Div,
+                Some('(') => Token::LeftParen,
+                Some(')') => Token::RightParen,
                 _ => panic!("Unknown character!")
             });
             input.trim_left_matches(|c| c == '+' ||
                                         c == '-' ||
                                         c == '*' ||
-                                        c == '/').to_string()
+                                        c == '/' ||
+                                        c == '(' ||
+                                        c == ')').to_string()
         }
     }
     res
@@ -60,10 +67,55 @@ fn tokenize(mut input: String) -> Vec<Token> {
 /// Transforms the tokens created by `tokenize` into RPN using the
 /// [Shunting-yard algorithm](https://en.wikipedia.org/wiki/Shunting-yard_algorithm)
 fn shunt(tokens: Vec<Token>) -> Vec<Token> {
-    vec![Token::Number(0)]
+    let mut queue: Vec<Token> = vec![];
+    let mut stack: Vec<Token> = vec![];
+    for token in tokens {
+        match token {
+            n @ Token::Number(_) => queue.push(n),
+            op @ Token::Plus | op @ Token::Sub |
+            op @ Token::Mul  | op @ Token::Div => {
+                while let Some(o) = stack.pop() {
+                    if precedence(&op) <= precedence(&o) {
+                        queue.push(o);
+                    } else {
+                        stack.push(o);
+                        break;
+                    }
+                }
+                stack.push(op)
+            },
+            p @ Token::LeftParen => stack.push(p),
+            Token::RightParen => {
+                let mut found_paren = false;
+                while let Some(op) = stack.pop() {
+                    match op {
+                        Token::LeftParen => {
+                            found_paren = true;
+                            break;
+                        },
+                        _ => queue.push(op)
+                    }
+                }
+                assert!(found_paren)
+            }
+        }
+    }
+    while let Some(op) = stack.pop() {
+        queue.push(op);
+    }
+    queue
 }
 
 /// Takes a Vec of Tokens converted to RPN by `shunt` and calculates the result
 fn calculate(stack: Vec<Token>) -> i64 {
     0
+}
+
+/// Returns the precedence of op
+fn precedence(op: &Token) -> usize {
+    match op {
+        &Token::Plus | &Token::Sub => 1,
+        &Token::Mul  | &Token::Div => 2,
+        _ => 0,
+    }
 }
