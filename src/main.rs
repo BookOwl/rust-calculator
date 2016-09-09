@@ -11,12 +11,14 @@ fn main() {
         io::stdin().read_line(&mut input)
             .expect("Failed to read line");
         let tokens = tokenize(input);
+        println!("{:?}", tokens);
         let stack = shunt(tokens);
         let res = calculate(stack);
         println!("{}", res);
     }
 }
 
+#[derive(Debug)]
 enum Token {
     Number (i64),
     Plus,
@@ -27,24 +29,27 @@ enum Token {
 
 fn tokenize(mut input: String) -> Vec<Token> {
     lazy_static! {
-        static ref NUMBER_RE: Regex = Regex::new(r"^-?[0-9]+").unwrap();
+        static ref NUMBER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
     }
     let mut res = vec![];
-    while !(input == "") {
+    while !(input.trim_left().is_empty()) {
         input = input.trim_left().to_string();
         input = if let Some((_, end)) = NUMBER_RE.find(&input) {
             let (num, rest) = input.split_at_mut(end);
             res.push(Token::Number(num.parse::<i64>().unwrap()));
             rest.to_string()
         } else {
-            res.push(match &input[0..1] {
-                "+" => Token::Plus,
-                "-" => Token::Sub,
-                "*" => Token::Mul,
-                "/" => Token::Div,
-                _ => panic!("Unknown char!"),
+            res.push(match input.chars().nth(0) {
+                Some('+') => Token::Plus,
+                Some('-') => Token::Sub,
+                Some('*') => Token::Mul,
+                Some('/') => Token::Div,
+                _ => panic!("Unknown character!")
             });
-            input[1..].to_string()
+            input.trim_left_matches(|c| c == '+' ||
+                                        c == '-' ||
+                                        c == '*' ||
+                                        c == '/').to_string()
         }
     }
     res
