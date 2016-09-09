@@ -27,6 +27,7 @@ enum Token {
     Div,
 }
 
+/// Tokenizes the input string into a Vec of Tokens.
 fn tokenize(mut input: String) -> Vec<Token> {
     lazy_static! {
         static ref NUMBER_RE: Regex = Regex::new(r"^[0-9]+").unwrap();
@@ -55,10 +56,13 @@ fn tokenize(mut input: String) -> Vec<Token> {
     res
 }
 
+/// Transforms the tokens created by `tokenize` into RPN using the
+/// [Shunting-yard algorithm](https://en.wikipedia.org/wiki/Shunting-yard_algorithm)
 fn shunt(tokens: Vec<Token>) -> Vec<Token> {
     vec![Token::Number(0)]
 }
 
+/// Takes a Vec of Tokens converted to RPN by `shunt` and calculates the result
 fn calculate(stack: Vec<Token>) -> i64 {
     0
 }
