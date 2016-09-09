@@ -19,6 +19,7 @@ fn main() {
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 enum Token {
     Number (i64),
     Plus,
