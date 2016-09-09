@@ -1,4 +1,4 @@
-# calculator
+# rust-calculator
 A command-line calculator written in Rust.
 ---
 
